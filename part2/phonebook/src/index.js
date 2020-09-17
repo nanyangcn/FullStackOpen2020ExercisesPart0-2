@@ -24,45 +24,47 @@ const Filter = ({ persons, setPersonsShow}) => {
   )
 }
 
-const PersonForm = ({ persons, setPersons, personsShow, setPersonsShow, setaddMessage, seterrorMessage }) => {
+const PersonForm = ({ persons, setPersons, setaddMessage, seterrorMessage }) => {
   const [ newName, setNewName ] = useState('')
   const [ newNumber, setNewNumber ] = useState('')
 
   const addPerson = (event) => {
     event.preventDefault()
+    
+    const newIdnumber = () => {
+      // if (persons.length === 0){
+      //   return(1)
+      // }
+      // else {
+      //   return(Math.max(...persons.map(value => value.id)) + 1)
+      // }
+      return(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER))
+    }
+
     const personObject ={
       name: newName,
       number: newNumber,
-      id: persons[persons.length-1].id + 1
+      id: newIdnumber()
     }
     
     const nameRepeat = persons.filter(person => person.name === newName)
 
-    if (nameRepeat.length !== 0) {
+    if (nameRepeat.length !== 0) { // replace
       const replaceFlag = window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)
 
       if (replaceFlag) {
-        const copyAndChange = (persons, personsShow, newId, newNumber) => {
+        const copyAndChange = (persons, replaceId, newNumber) => {
           let personsCopy = [...persons]
-          let personsShowCopy = [...personsShow]
   
-          const index = personsCopy.findIndex(value => value.id === newId)
-          const indexShow = personsShowCopy.findIndex(value => value.id === newId)
+          const index = personsCopy.findIndex(value => value.id === replaceId)
   
           personsCopy[index].number = newNumber
-          personsShowCopy[indexShow].number = newNumber
   
-          return(
-            {
-              persons: personsCopy,
-              personsShow: personsShowCopy
-            }
-          )
+          return(personsCopy)
         }
 
-        const personsReplace = copyAndChange(persons, personsShow, nameRepeat[0].id, personObject.number)
-        setPersons(personsReplace.persons)
-        setPersonsShow(personsReplace.personsShow)
+        const personsReplace = copyAndChange(persons, nameRepeat[0].id, personObject.number)
+        setPersons(personsReplace)
 
         noteService
           .update(nameRepeat[0].id, personObject)
@@ -72,9 +74,8 @@ const PersonForm = ({ persons, setPersons, personsShow, setPersonsShow, setaddMe
           })
       }
     }
-    else if (newName !== '' || newNumber !== '') {
+    else if (newName !== '' || newNumber !== '') { // add
       setPersons(persons.concat(personObject))
-      setPersonsShow(personsShow.concat(personObject))
 
       noteService
         .create(personObject)
@@ -126,13 +127,11 @@ const PersonForm = ({ persons, setPersons, personsShow, setPersonsShow, setaddMe
   )
 }
 
-const Person = ({ person, persons, setPersons, personsShow, setPersonsShow, seterrorMessage }) => {
+const Person = ({ person, persons, setPersons, seterrorMessage }) => {
   const personDelete = () => {
     const personsAfterDelete = persons.filter(value => value.id !== person.id )
-    const personsShowAfterDelete = personsShow.filter(value => value.id !== person.id )
 
     setPersons(personsAfterDelete)
-    setPersonsShow(personsShowAfterDelete)
 
     noteService
       .remove(person.id)
@@ -150,14 +149,13 @@ const Person = ({ person, persons, setPersons, personsShow, setPersonsShow, sete
   )
 }
 
-const Persons = ({ persons, setPersons, personsShow, setPersonsShow, seterrorMessage}) => {
+const Persons = ({ persons, setPersons, personsShow, seterrorMessage}) => {
   return(
     <table>
     <tbody>
       {personsShow.map(person => 
         <Person key={person.id} person={person}
         persons={persons} setPersons={setPersons}
-        personsShow={personsShow} setPersonsShow={setPersonsShow}
         seterrorMessage={seterrorMessage}
         />
       )}
@@ -166,24 +164,13 @@ const Persons = ({ persons, setPersons, personsShow, setPersonsShow, seterrorMes
   )
 }
 
-const Message = ({ addMessage, setaddMessage }) => {
-  if (addMessage === null)
+const Message = ({ message, className }) => {
+  if (message === null)
     return (null)
   else
     return(
       <div>
-        <p className='message'>{addMessage}</p>
-      </div>
-    )
-}
-
-const ErrorMessage = ({ errorMessage, seterrorMessage }) => {
-  if (errorMessage === null)
-    return (null)
-  else
-    return(
-      <div>
-        <p className='error'>{errorMessage}</p>
+        <p className={className}>{message}</p>
       </div>
     )
 }
@@ -198,35 +185,32 @@ const App = () => {
   useEffect(() => {
     noteService
       .getAll()
-      .then(response => {
-        setPersons(response)
-        setPersonsShow(response)
-      })
+      .then(response => setPersons(response))
       .catch(response => {
         seterrorMessage(`Get data fail from the server`)
         setTimeout(() => seterrorMessage(null), 5000)
       })
-  }, [])
+  }, [persons.length])
 
+  useEffect(() => setPersonsShow(persons), [persons])
   return (
     <div>
       <h2>Phonebook</h2>
-      <Message addMessage={addMessage} setaddMessage={setaddMessage} />
-      <ErrorMessage errorMessage={errorMessage} seterrorMessage={seterrorMessage} />
+      <Message message={addMessage} className='message' />
+      <Message message={errorMessage} className='error' />
       <Filter
         persons={persons} setPersonsShow={setPersonsShow} seterrorMessage={seterrorMessage}
       />
       <h3>Add a new</h3>
       <PersonForm
         persons={persons} setPersons={setPersons}
-        personsShow={personsShow} setPersonsShow={setPersonsShow}
         addMessage={addMessage} setaddMessage={setaddMessage}
         seterrorMessage={seterrorMessage}
       />
       <h3>Numbers</h3>
       <Persons
         persons={persons} setPersons={setPersons}
-        personsShow={personsShow} setPersonsShow={setPersonsShow}
+        personsShow={personsShow}
         seterrorMessage={seterrorMessage}
       />
     </div>
