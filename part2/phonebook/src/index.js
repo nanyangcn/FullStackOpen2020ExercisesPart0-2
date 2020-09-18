@@ -24,7 +24,7 @@ const Filter = ({ persons, setPersonsShow}) => {
   )
 }
 
-const PersonForm = ({ persons, setPersons, setaddMessage, seterrorMessage }) => {
+const PersonForm = ({ persons, setPersons, setPersonsShow, setAddMessage, setErrorMessage }) => {
   const [ newName, setNewName ] = useState('')
   const [ newNumber, setNewNumber ] = useState('')
 
@@ -65,28 +65,32 @@ const PersonForm = ({ persons, setPersons, setaddMessage, seterrorMessage }) => 
 
         const personsReplace = copyAndChange(persons, nameRepeat[0].id, personObject.number)
         setPersons(personsReplace)
+        setPersonsShow(personsReplace)
 
         noteService
           .update(nameRepeat[0].id, personObject)
-          .catch(error => {
-            seterrorMessage(`Update fail`)
-            setTimeout(() => seterrorMessage(null), 5000)
+          .then(() => setAddMessage('Update sucessfully'))
+          .catch(() => {
+            setErrorMessage(`Update fail`)
+            setTimeout(() => setErrorMessage(null), 5000)
           })
       }
     }
     else if (newName !== '' || newNumber !== '') { // add
-      setPersons(persons.concat(personObject))
 
       noteService
         .create(personObject)
-        .then(() => {
-          setaddMessage(`Added ${newName}`)
-          setTimeout(() => setaddMessage(null), 5000)
+        .then((response) => {
+          personObject.id = response.id
+          setAddMessage(`Added ${newName}`)
+          setTimeout(() => setAddMessage(null), 5000)
         })
-        .catch(response => {
-          seterrorMessage(`Post fail`)
-          setTimeout(() => seterrorMessage(null), 5000)
+        .catch(() => {
+          setErrorMessage(`Post fail`)
+          setTimeout(() => setErrorMessage(null), 5000)
         })
+      
+      setPersons(persons.concat(personObject))
     }
 
     setNewName('')
@@ -127,17 +131,19 @@ const PersonForm = ({ persons, setPersons, setaddMessage, seterrorMessage }) => 
   )
 }
 
-const Person = ({ person, persons, setPersons, seterrorMessage }) => {
+const Person = ({ person, persons, setPersons, setPersonsShow, setAddMessage, setErrorMessage }) => {
   const personDelete = () => {
     const personsAfterDelete = persons.filter(value => value.id !== person.id )
 
     setPersons(personsAfterDelete)
+    setPersonsShow(personsAfterDelete)
 
     noteService
       .remove(person.id)
-      .catch(response => {
-        seterrorMessage(`Information of ${person.name} has already beed removed from server`)
-        setTimeout(() => seterrorMessage(null), 5000)
+      .then(() => setAddMessage('Delete sucessfully'))
+      .catch(() => {
+        setErrorMessage(`Information of ${person.name} has already beed removed from server`)
+        setTimeout(() => setErrorMessage(null), 5000)
       })
   }
   return(
@@ -149,14 +155,14 @@ const Person = ({ person, persons, setPersons, seterrorMessage }) => {
   )
 }
 
-const Persons = ({ persons, setPersons, personsShow, seterrorMessage}) => {
+const Persons = ({ persons, setPersons, setPersonsShow, personsShow, setAddMessage, setErrorMessage}) => {
   return(
     <table>
     <tbody>
       {personsShow.map(person => 
         <Person key={person.id} person={person}
-        persons={persons} setPersons={setPersons}
-        seterrorMessage={seterrorMessage}
+        persons={persons} setPersons={setPersons} setPersonsShow={setPersonsShow}
+        setAddMessage={setAddMessage} setErrorMessage={setErrorMessage}
         />
       )}
     </tbody>
@@ -179,18 +185,18 @@ const App = () => {
 
   const [ persons, setPersons ] = useState([])
   const [ personsShow, setPersonsShow ] = useState(persons)
-  const [ addMessage, setaddMessage ] = useState(null)
-  const [ errorMessage, seterrorMessage ] = useState(null)
+  const [ addMessage, setAddMessage ] = useState(null)
+  const [ errorMessage, setErrorMessage ] = useState(null)
 
   useEffect(() => {
     noteService
       .getAll()
       .then(response => setPersons(response))
-      .catch(response => {
-        seterrorMessage(`Get data fail from the server`)
-        setTimeout(() => seterrorMessage(null), 5000)
+      .catch(() => {
+        setErrorMessage(`Get data fail from the server`)
+        setTimeout(() => setErrorMessage(null), 5000)
       })
-  }, [persons.length])
+  }, [])
 
   useEffect(() => setPersonsShow(persons), [persons])
   return (
@@ -199,19 +205,19 @@ const App = () => {
       <Message message={addMessage} className='message' />
       <Message message={errorMessage} className='error' />
       <Filter
-        persons={persons} setPersonsShow={setPersonsShow} seterrorMessage={seterrorMessage}
+        persons={persons} setPersonsShow={setPersonsShow} setErrorMessage={setErrorMessage}
       />
       <h3>Add a new</h3>
       <PersonForm
-        persons={persons} setPersons={setPersons}
-        addMessage={addMessage} setaddMessage={setaddMessage}
-        seterrorMessage={seterrorMessage}
+        persons={persons} setPersons={setPersons} setPersonsShow={setPersonsShow}
+        addMessage={addMessage} setAddMessage={setAddMessage}
+        setErrorMessage={setErrorMessage}
       />
       <h3>Numbers</h3>
       <Persons
         persons={persons} setPersons={setPersons}
-        personsShow={personsShow}
-        seterrorMessage={seterrorMessage}
+        personsShow={personsShow} setPersonsShow={setPersonsShow}
+        setAddMessage={setAddMessage} setErrorMessage={setErrorMessage}
       />
     </div>
   )
