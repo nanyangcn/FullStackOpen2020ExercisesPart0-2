@@ -89,7 +89,7 @@ const PersonForm = ({ persons, setPersons, setPersonsShow, setAddMessage, setErr
           setTimeout(() => setAddMessage(null), 5000)
         })
         .catch(() => {
-          setErrorMessage(`Post fail`)
+          setErrorMessage(`Information already exist`)
           setTimeout(() => setErrorMessage(null), 5000)
         })
       
@@ -202,7 +202,7 @@ const App = () => {
         setErrorMessage(`Get data fail from the server`)
         setTimeout(() => setErrorMessage(null), 5000)
       })
-  }, [])
+  }, [addMessage, errorMessage])
 
   useEffect(() => setPersonsShow(persons), [persons])
   return (
