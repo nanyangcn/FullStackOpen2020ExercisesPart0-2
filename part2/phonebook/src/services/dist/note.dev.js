@@ -9,7 +9,7 @@ var _axios = _interopRequireDefault(require("axios"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var baseUrl = 'http://localhost:3001/persons';
+var baseUrl = 'http://localhost:3001/persons'; // 'https://lit-beach-60745.herokuapp.com/api/persons'
 
 var getAll = function getAll() {
   return _axios["default"].get(baseUrl).then(function (res) {
