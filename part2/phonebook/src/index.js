@@ -69,7 +69,10 @@ const PersonForm = ({ persons, setPersons, setPersonsShow, setAddMessage, setErr
 
         noteService
           .update(nameRepeat[0].id, personObject)
-          .then(() => setAddMessage('Update sucessfully'))
+          .then(() => {
+            setAddMessage('Update sucessfully')
+            setTimeout(() => setAddMessage(null), 5000)
+          })
           .catch(() => {
             setErrorMessage(`Update fail`)
             setTimeout(() => setErrorMessage(null), 5000)
@@ -140,7 +143,10 @@ const Person = ({ person, persons, setPersons, setPersonsShow, setAddMessage, se
 
     noteService
       .remove(person.id)
-      .then(() => setAddMessage('Delete sucessfully'))
+      .then(() => {
+        setAddMessage('Delete sucessfully')
+        setTimeout(() => setAddMessage(null), 5000)
+      })
       .catch(() => {
         setErrorMessage(`Information of ${person.name} has already beed removed from server`)
         setTimeout(() => setErrorMessage(null), 5000)
