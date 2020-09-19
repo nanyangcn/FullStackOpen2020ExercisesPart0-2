@@ -119,7 +119,7 @@ const PersonForm = ({ persons, setPersons, setPersonsShow, setAddMessage, setErr
         <tr>
           <td>number:</td>
           <td>
-            <input id="number" type="number"
+            <input type="tel" id="phone" name="phone"
               value={newNumber}
               onChange={handleNumberChange}
             />
