@@ -26,14 +26,14 @@ const Filter = ({ countries, setcountries, setcountriesShow, setShow}) => {
 
 const Weather =({ city }) => {
   const [ weather, setWeather ] = useState()
-  const api_key = process.env.REACT_APP_API_KEY
-
   useEffect(() => {
+    const api_key = process.env.REACT_APP_API_KEY
+    const url = `http://api.weatherstack.com/current?access_key=${api_key}&query=${city}`
     axios
-      .get(`http://api.weatherstack.com/current?access_key=${api_key}&query=${city}`)
+      .get(url)
       .then(response => setWeather(response.data))
-  }, [])
-  console.log(weather)
+  }, [city])
+
   if (weather !== undefined)
     return(
       <div>
