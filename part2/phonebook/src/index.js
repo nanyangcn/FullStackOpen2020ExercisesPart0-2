@@ -49,51 +49,58 @@ const PersonForm = ({ persons, setPersons, setPersonsShow, setAddMessage, setErr
     
     const nameRepeat = persons.filter(person => person.name === newName)
 
-    if (nameRepeat.length !== 0) { // replace
-      const replaceFlag = window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)
-
-      if (replaceFlag) {
-        const copyAndChange = (persons, replaceId, newNumber) => {
-          let personsCopy = [...persons]
+    if (newName === '' || newNumber === '') {
+      setErrorMessage(`Add fail: name or number is empty!`)
+      setTimeout(() => setErrorMessage(null), 5000)
+    }
+    else{
+      if (nameRepeat.length !== 0) { // replace
+        const replaceFlag = window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)
   
-          const index = personsCopy.findIndex(value => value.id === replaceId)
+        if (replaceFlag) {
+          const copyAndChange = (persons, replaceId, newNumber) => {
+            let personsCopy = [...persons]
+    
+            const index = personsCopy.findIndex(value => value.id === replaceId)
+    
+            personsCopy[index].number = newNumber
+    
+            return(personsCopy)
+          }
   
-          personsCopy[index].number = newNumber
+          const personsReplace = copyAndChange(persons, nameRepeat[0].id, personObject.number)
+          setPersons(personsReplace)
+          setPersonsShow(personsReplace)
   
-          return(personsCopy)
+          noteService
+            .update(nameRepeat[0].id, personObject)
+            .then(() => {
+              setAddMessage('Updated sucessfully')
+              setTimeout(() => setAddMessage(null), 5000)
+            })
+            .catch((error) => {
+              console.log(error)
+              setErrorMessage(`Update fail`)
+              setTimeout(() => setErrorMessage(null), 5000)
+            })
         }
-
-        const personsReplace = copyAndChange(persons, nameRepeat[0].id, personObject.number)
-        setPersons(personsReplace)
-        setPersonsShow(personsReplace)
-
+      }
+      else { // add
         noteService
-          .update(nameRepeat[0].id, personObject)
-          .then(() => {
-            setAddMessage('Update sucessfully')
+          .create(personObject)
+          .then((response) => {
+            personObject.id = response.id
+            setAddMessage(`Added ${newName} sucessfully`)
             setTimeout(() => setAddMessage(null), 5000)
           })
-          .catch(() => {
-            setErrorMessage(`Update fail`)
+          .catch((error) => {
+            console.log(error)
+            setErrorMessage(`Add fail`)
             setTimeout(() => setErrorMessage(null), 5000)
           })
+        
+        setPersons(persons.concat(personObject))
       }
-    }
-    else if (newName !== '' || newNumber !== '') { // add
-
-      noteService
-        .create(personObject)
-        .then((response) => {
-          personObject.id = response.id
-          setAddMessage(`Added ${newName}`)
-          setTimeout(() => setAddMessage(null), 5000)
-        })
-        .catch(() => {
-          setErrorMessage(`Information already exist`)
-          setTimeout(() => setErrorMessage(null), 5000)
-        })
-      
-      setPersons(persons.concat(personObject))
     }
 
     setNewName('')
@@ -110,7 +117,7 @@ const PersonForm = ({ persons, setPersons, setPersonsShow, setAddMessage, setErr
         <tr>
           <td>name:</td>
           <td>
-            <input 
+            <input id="name" name="name"
               value={newName}
               onChange={handleNameChange}
             />
@@ -144,11 +151,12 @@ const Person = ({ person, persons, setPersons, setPersonsShow, setAddMessage, se
     noteService
       .remove(person.id)
       .then(() => {
-        setAddMessage('Delete sucessfully')
+        setAddMessage('Deleted sucessfully')
         setTimeout(() => setAddMessage(null), 5000)
       })
-      .catch(() => {
-        setErrorMessage(`Information of ${person.name} has already beed removed from server`)
+      .catch((error) => {
+        console.log(error)
+        setErrorMessage(`This person has already been removed!`)
         setTimeout(() => setErrorMessage(null), 5000)
       })
   }
@@ -198,8 +206,9 @@ const App = () => {
     noteService
       .getAll()
       .then(response => setPersons(response))
-      .catch(() => {
-        setErrorMessage(`Get data fail from the server`)
+      .catch((error) => {
+        console.log(error)
+        setErrorMessage(`Get data fail`)
         setTimeout(() => setErrorMessage(null), 5000)
       })
   }, [addMessage, errorMessage])
